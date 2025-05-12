@@ -1,0 +1,413 @@
+/* Custom styles for VulnTrace - Modern UI */
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #4c6ef5, #7c4dff);
+    --secondary-gradient: linear-gradient(135deg, #3a4750, #303841);
+    --danger-gradient: linear-gradient(135deg, #ff4757, #ff6b81);
+    --success-gradient: linear-gradient(135deg, #2ed573, #7bed9f);
+    --warning-gradient: linear-gradient(135deg, #ffa502, #ff7f50);
+    --info-gradient: linear-gradient(135deg, #70a1ff, #1e90ff);
+    
+    --card-border-radius: 16px;
+    --button-border-radius: 8px;
+    --badge-border-radius: 6px;
+    
+    --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --box-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --box-shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* General page styles */
+body {
+    overflow-x: hidden;
+}
+
+.container, .container-fluid {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+/* Typography improvements */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+/* Modern button styles */
+.btn {
+    font-weight: 500;
+    border-radius: var(--button-border-radius);
+    padding: 0.5rem 1.25rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    box-shadow: 0 4px 15px rgba(76, 110, 245, 0.35);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(76, 110, 245, 0.5);
+}
+
+.btn-outline-primary {
+    border: 1px solid;
+    border-color: #4c6ef5;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-gradient);
+}
+
+.btn-danger {
+    background: var(--danger-gradient);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.35);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
+}
+
+/* Navbar styling */
+.navbar {
+    padding: 1rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: var(--secondary-gradient) !important;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.nav-link {
+    font-weight: 500;
+    position: relative;
+    padding: 0.5rem 1rem;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary-gradient);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after, .nav-link.active::after {
+    width: 80%;
+}
+
+/* Custom styling for severity badges */
+.badge {
+    font-weight: 600;
+    padding: 0.5em 0.75em;
+    border-radius: var(--badge-border-radius);
+}
+
+.badge.severity-high {
+    background: var(--danger-gradient);
+}
+
+.badge.severity-medium {
+    background: var(--warning-gradient);
+    color: var(--bs-dark);
+}
+
+.badge.severity-low {
+    background: var(--info-gradient);
+    color: var(--bs-dark);
+}
+
+.badge.severity-info {
+    background: var(--secondary-gradient);
+}
+
+/* Improved card styling */
+.card {
+    border: none;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 1.5rem;
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--box-shadow-hover);
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Features list */
+.list-group-item {
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.list-group-item:not(:last-child) {
+    border-bottom: 1px solid rgba(var(--bs-light-rgb), 0.1);
+}
+
+/* Form styling */
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(var(--bs-light-rgb), 0.2);
+    background-color: rgba(var(--bs-dark-rgb), 0.2);
+    color: var(--bs-light);
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+    background-color: rgba(var(--bs-dark-rgb), 0.3);
+}
+
+.input-group-text {
+    border-radius: 8px 0 0 8px;
+    background-color: rgba(var(--bs-dark-rgb), 0.4);
+    border: 1px solid rgba(var(--bs-light-rgb), 0.2);
+    color: var(--bs-light);
+}
+
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* Code blocks styling */
+code {
+    font-size: 0.9em;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.2rem;
+    background-color: rgba(var(--bs-dark-rgb), 0.2);
+    color: #70a1ff;
+}
+
+/* Accordion styling */
+.accordion-item {
+    background: transparent;
+    border: none;
+    margin-bottom: 0.5rem;
+}
+
+.accordion-button {
+    border-radius: var(--button-border-radius);
+    padding: 1rem 1.25rem;
+    background: rgba(var(--bs-dark-rgb), 0.4);
+    box-shadow: none;
+}
+
+.accordion-button:not(.collapsed) {
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary);
+}
+
+.accordion-button::after {
+    background-size: 1.25rem;
+}
+
+/* Vulnerability detail sections */
+.vuln-details {
+    background-color: rgba(var(--bs-dark-rgb), 0.05);
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Footer styling */
+.footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    background: var(--secondary-gradient);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Better focus indicators for accessibility */
+input:focus, button:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25) !important;
+}
+
+/* Fix for dark mode consistency */
+[data-bs-theme=dark] {
+    --bs-body-bg: #121418;
+    --bs-body-color: #e9ecef;
+}
+
+/* Report page specific styles */
+.vulnerability-item {
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.vulnerability-item:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.vulnerability-item.severity-high {
+    border-left-color: var(--bs-danger);
+}
+
+.vulnerability-item.severity-medium {
+    border-left-color: var(--bs-warning);
+}
+
+.vulnerability-item.severity-low {
+    border-left-color: var(--bs-info);
+}
+
+/* Alerts styling */
+.alert {
+    border: none;
+    border-radius: var(--badge-border-radius);
+    padding: 1rem 1.25rem;
+}
+
+.alert-danger {
+    background: rgba(255, 71, 87, 0.1);
+    color: #ff4757;
+}
+
+.alert-success {
+    background: rgba(46, 213, 115, 0.1);
+    color: #2ed573;
+}
+
+.alert-warning {
+    background: rgba(255, 165, 2, 0.1);
+    color: #ffa502;
+}
+
+.alert-info {
+    background: rgba(112, 161, 255, 0.1);
+    color: #70a1ff;
+}
+
+/* Tables */
+.table {
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: rgba(var(--bs-dark-rgb), 0.4);
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.table tbody td {
+    padding: 0.75rem 1rem;
+}
+
+/* Animation keyframes */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(var(--bs-primary-rgb), 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0);
+    }
+}
+
+/* Scanning animation components */
+.scan-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.animation-container {
+    position: relative;
+    height: 200px;
+    margin: 2rem 0;
+    overflow: hidden;
+}
+
+.pulse-circle {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    animation: pulse 2s infinite;
+}
+
+.scan-icon {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    color: white;
+    font-size: 2rem;
+    box-shadow: 0 0 15px rgba(var(--bs-primary-rgb), 0.5);
+    z-index: 2;
+}
+
+.activity-log {
+    height: 150px;
+    overflow-y: auto;
+    background-color: rgba(var(--bs-dark-rgb), 0.4);
+    border-radius: 12px;
+    padding: 1rem;
+    font-family: monospace;
+    text-align: left;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(var(--bs-light-rgb), 0.1);
+}
+
+/* Tooltips */
+.tooltip {
+    font-size: 0.85rem;
+}
+
+.tooltip-inner {
+    background-color: #303841;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .card-header, .card-body {
+        padding: 1rem;
+    }
+    
+    .btn {
+        padding: 0.4rem 1rem;
+    }
+    
+    .scan-container {
+        padding: 1rem;
+    }
+}

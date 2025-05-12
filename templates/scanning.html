@@ -1,0 +1,371 @@
+{% extends "layout.html" %}
+
+{% block title %}Scanning in Progress{% endblock %}
+
+{% block head %}
+<style>
+    .scan-container {
+        max-width: 700px;
+        margin: 3rem auto;
+        text-align: center;
+    }
+    
+    .animation-container {
+        position: relative;
+        height: 200px;
+        margin: 2rem 0;
+        overflow: hidden;
+    }
+    
+    .pulse-circle {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        animation: pulse 2s infinite;
+    }
+    
+    .pulse-circle:nth-child(2) {
+        animation-delay: 0.5s;
+    }
+    
+    .pulse-circle:nth-child(3) {
+        animation-delay: 1s;
+    }
+    
+    .scan-icon {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bs-primary);
+        border-radius: 50%;
+        color: white;
+        font-size: 2rem;
+        box-shadow: 0 0 15px rgba(var(--bs-primary-rgb), 0.5);
+        z-index: 2;
+    }
+    
+    .activity-log {
+        height: 150px;
+        overflow-y: auto;
+        background-color: var(--bs-dark);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        font-family: monospace;
+        text-align: left;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(var(--bs-light-rgb), 0.2);
+    }
+    
+    .log-entry {
+        margin-bottom: 0.25rem;
+        color: var(--bs-light);
+        font-size: 0.85rem;
+    }
+    
+    .log-entry.info {
+        color: var(--bs-info);
+    }
+    
+    .log-entry.warn {
+        color: var(--bs-warning);
+    }
+    
+    .log-entry.error {
+        color: var(--bs-danger);
+    }
+    
+    .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    
+    .stats-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1.5rem;
+    }
+    
+    .stat-card {
+        flex: 1;
+        padding: 1rem;
+        margin: 0 0.5rem;
+        border-radius: 0.5rem;
+        background-color: var(--bs-gray-800);
+        border: 1px solid rgba(var(--bs-light-rgb), 0.1);
+    }
+    
+    .stat-card .value {
+        font-size: 1.75rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-card .label {
+        font-size: 0.85rem;
+        color: var(--bs-gray-500);
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0.8;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .status-text {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        font-weight: 300;
+    }
+    
+    .blinking-dots {
+        display: inline-block;
+        animation: blink 1.4s infinite both;
+    }
+    
+    .cancel-btn {
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="scan-container">
+    <h2 class="mb-4">
+        <i class="fas fa-radar me-2"></i>Vulnerability Scan in Progress
+    </h2>
+    
+    <div class="status-text">
+        Scanning <strong class="text-primary">{{ target }}</strong><span class="blinking-dots">...</span>
+    </div>
+    
+    <div class="progress mb-4" style="height: 8px;">
+        <div id="scanProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    
+    <div class="animation-container">
+        <div class="scan-icon">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="pulse-circle"></div>
+        <div class="pulse-circle"></div>
+        <div class="pulse-circle"></div>
+    </div>
+    
+    <div class="stats-row">
+        <div class="stat-card">
+            <div id="urlsScanned" class="value">0</div>
+            <div class="label">URLs Scanned</div>
+        </div>
+        <div class="stat-card">
+            <div id="vulnFound" class="value">0</div>
+            <div class="label">Vulnerabilities</div>
+        </div>
+        <div class="stat-card">
+            <div id="elapsedTime" class="value">0s</div>
+            <div class="label">Elapsed Time</div>
+        </div>
+    </div>
+    
+    <div class="activity-log" id="activityLog">
+        <div class="log-entry info">[INFO] Starting scan for {{ target }}</div>
+        <div class="log-entry">[SCAN] Identifying target information...</div>
+    </div>
+    
+    <button id="cancelScan" class="btn btn-outline-danger cancel-btn">
+        <i class="fas fa-times-circle me-2"></i>Cancel Scan
+    </button>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const targetUrl = "{{ target }}";
+        const scanType = "{{ scan_type }}";
+        const scanDepth = {{ depth }};
+        const scanTimeout = {{ timeout }};
+        
+        let scanStartTime = new Date();
+        let urlsScanned = 0;
+        let vulnerabilitiesFound = 0;
+        let progressValue = 0;
+        let scanCompleted = false;
+        
+        const elapsedTimeEl = document.getElementById('elapsedTime');
+        const urlsScannedEl = document.getElementById('urlsScanned');
+        const vulnFoundEl = document.getElementById('vulnFound');
+        const progressBarEl = document.getElementById('scanProgressBar');
+        const activityLogEl = document.getElementById('activityLog');
+        const cancelBtn = document.getElementById('cancelScan');
+        
+        // Add simulated log messages
+        const logMessages = [
+            { type: '', message: 'Checking for security headers...' },
+            { type: 'info', message: 'Crawling website structure' },
+            { type: '', message: 'Analyzing form inputs' },
+            { type: '', message: 'Testing for XSS vulnerabilities' },
+            { type: '', message: 'Testing for SQL injection' },
+            { type: '', message: 'Checking for CSRF protections' },
+            { type: '', message: 'Analyzing redirect behavior' },
+            { type: 'info', message: 'Processing discovered endpoints' },
+            { type: '', message: 'Testing cookie security' }
+        ];
+        
+        function addLogMessage(type, message) {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            const prefix = type ? `[${type.toUpperCase()}]` : '[SCAN]';
+            logEntry.textContent = `${prefix} ${message}`;
+            activityLogEl.appendChild(logEntry);
+            activityLogEl.scrollTop = activityLogEl.scrollHeight;
+        }
+        
+        function updateElapsedTime() {
+            const now = new Date();
+            const elapsed = Math.floor((now - scanStartTime) / 1000);
+            
+            if (elapsed < 60) {
+                elapsedTimeEl.textContent = elapsed + 's';
+            } else {
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                elapsedTimeEl.textContent = `${minutes}m ${seconds}s`;
+            }
+        }
+        
+        function updateProgress() {
+            // Simulate progress
+            if (!scanCompleted && progressValue < 100) {
+                // Progress accelerates as we approach the end
+                const increment = progressValue < 70 ? 1 : 0.5;
+                progressValue = Math.min(progressValue + increment, 99);
+                progressBarEl.style.width = progressValue + '%';
+                progressBarEl.setAttribute('aria-valuenow', progressValue);
+            }
+        }
+        
+        // Simulate increasing URLs scanned
+        function updateUrlsScanned() {
+            if (!scanCompleted && progressValue < 90) {
+                const increment = Math.floor(Math.random() * 3) + 1;
+                urlsScanned += increment;
+                urlsScannedEl.textContent = urlsScanned;
+            }
+        }
+        
+        // Simulate occasionally finding vulnerabilities
+        function updateVulnerabilities() {
+            if (!scanCompleted && progressValue > 20 && progressValue < 90 && Math.random() > 0.7) {
+                vulnerabilitiesFound++;
+                vulnFoundEl.textContent = vulnerabilitiesFound;
+                
+                // Add a specific vulnerability log message
+                const vulnTypes = ['XSS', 'SQL Injection', 'CSRF', 'Missing Security Headers', 'Open Redirect'];
+                const randomVuln = vulnTypes[Math.floor(Math.random() * vulnTypes.length)];
+                addLogMessage('warn', `Potential ${randomVuln} vulnerability detected`);
+            }
+        }
+        
+        // Add log messages at intervals
+        function addRandomLog() {
+            if (!scanCompleted && progressValue < 90) {
+                const randomLog = logMessages[Math.floor(Math.random() * logMessages.length)];
+                addLogMessage(randomLog.type, randomLog.message);
+            }
+        }
+        
+        // Set up initial activity
+        setTimeout(() => {
+            addLogMessage('info', 'Target information acquired');
+            addLogMessage('', 'Beginning crawl at depth ' + scanDepth);
+        }, 1500);
+        
+        // Update intervals
+        const elapsedInterval = setInterval(updateElapsedTime, 1000);
+        const progressInterval = setInterval(updateProgress, 500);
+        const urlsInterval = setInterval(updateUrlsScanned, 2000);
+        const vulnInterval = setInterval(updateVulnerabilities, 3000);
+        const logInterval = setInterval(addRandomLog, 2500);
+        
+        // Check periodically for scan completion
+        const checkScanStatus = setInterval(() => {
+            fetch('/scan_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.completed) {
+                        completeScan(data.report_url);
+                    }
+                })
+                .catch(error => console.error('Error checking scan status:', error));
+        }, 3000);
+        
+        // Complete the scan (redirect to results)
+        function completeScan(reportUrl) {
+            clearAllIntervals();
+            scanCompleted = true;
+            
+            // Show 100% complete
+            progressValue = 100;
+            progressBarEl.style.width = '100%';
+            progressBarEl.setAttribute('aria-valuenow', 100);
+            progressBarEl.classList.remove('progress-bar-animated');
+            
+            addLogMessage('info', 'Scan completed successfully!');
+            addLogMessage('info', `Found ${vulnerabilitiesFound} potential vulnerabilities.`);
+            
+            // Redirect to report after a short delay
+            setTimeout(() => {
+                window.location.href = reportUrl || '/report';
+            }, 1500);
+        }
+        
+        // Simulate scan completion after a reasonable time (if server doesn't respond)
+        setTimeout(() => {
+            if (!scanCompleted) {
+                completeScan('/report');
+            }
+        }, 30000); // 30 seconds max for demo
+        
+        function clearAllIntervals() {
+            clearInterval(elapsedInterval);
+            clearInterval(progressInterval);
+            clearInterval(urlsInterval);
+            clearInterval(vulnInterval);
+            clearInterval(logInterval);
+            clearInterval(checkScanStatus);
+        }
+        
+        // Cancel button
+        cancelBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to cancel the scan?')) {
+                clearAllIntervals();
+                window.location.href = '/';
+            }
+        });
+    });
+</script>
+{% endblock %}

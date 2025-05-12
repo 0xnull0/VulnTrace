@@ -1,0 +1,282 @@
+{% extends "layout.html" %}
+
+{% block title %}Scan Report{% endblock %}
+
+{% block head %}
+<style>
+    .severity-high {
+        background-color: var(--bs-danger) !important;
+    }
+    .severity-medium {
+        background-color: var(--bs-warning) !important;
+    }
+    .severity-low {
+        background-color: var(--bs-info) !important;
+    }
+    .severity-info {
+        background-color: var(--bs-secondary) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-file-alt me-2"></i>Vulnerability Scan Report
+        {% if from_history is defined and from_history %}
+        <span class="badge bg-info ms-2">Historical</span>
+        {% endif %}
+    </h2>
+    <div>
+        {% if not from_history is defined or not from_history %}
+        <a href="{{ url_for('download_report') }}" class="btn btn-primary">
+            <i class="fas fa-download me-2"></i>Download JSON
+        </a>
+        {% endif %}
+        {% if from_history is defined and from_history %}
+        <a href="{{ url_for('scan_history') }}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to History
+        </a>
+        {% endif %}
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-plus me-2"></i>New Scan
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4><i class="fas fa-info-circle me-2"></i>Scan Summary</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Target:</th>
+                        <td>{{ target }}</td>
+                    </tr>
+                    <tr>
+                        <th>Scan Time:</th>
+                        <td>{{ scan_time }}</td>
+                    </tr>
+                    <tr>
+                        <th>Domain:</th>
+                        <td>{{ results.target_info.domain }}</td>
+                    </tr>
+                    <tr>
+                        <th>IP Addresses:</th>
+                        <td>
+                            {% for ip in results.target_info.ip_addresses %}
+                                <span class="badge bg-secondary">{{ ip }}</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Vulnerability Summary</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="progress w-75">
+                        {% set high = results.summary.high_severity or 0 %}
+                        {% set medium = results.summary.medium_severity or 0 %}
+                        {% set low = results.summary.low_severity or 0 %}
+                        {% set total = results.summary.vulnerability_count or 0 %}
+                        
+                        {% if high > 0 %}
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                style="width: {{ (high / total * 100) if total > 0 else 0 }}%" 
+                                aria-valuenow="{{ high }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+                                {{ high }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if medium > 0 %}
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                style="width: {{ (medium / total * 100) if total > 0 else 0 }}%" 
+                                aria-valuenow="{{ medium }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+                                {{ medium }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if low > 0 %}
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                style="width: {{ (low / total * 100) if total > 0 else 0 }}%" 
+                                aria-valuenow="{{ low }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+                                {{ low }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <span class="ms-2 badge bg-secondary">Total: {{ total }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <div><span class="badge bg-danger me-1">High</span> {{ high }}</div>
+                    <div><span class="badge bg-warning me-1">Medium</span> {{ medium }}</div>
+                    <div><span class="badge bg-info me-1">Low</span> {{ low }}</div>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Scanned {{ results.summary.urls_scanned or 0 }} URLs in {{ results.summary.scan_duration or 0 }} seconds
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results.vulnerabilities %}
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        <h4><i class="fas fa-bug me-2"></i>Vulnerabilities Found</h4>
+    </div>
+    <div class="card-body p-0">
+        <div class="accordion" id="vulnAccordion">
+            {% for vuln in results.vulnerabilities %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                           data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                                <span class="badge severity-{{ vuln.severity }}">{{ vuln.severity|upper }}</span>
+                                <strong class="ms-2">{{ vuln.type|replace('_', ' ')|title }}</strong>
+                            </div>
+                            <small class="text-muted">{{ vuln.url|truncate(50) }}</small>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#vulnAccordion">
+                    <div class="accordion-body">
+                        <p>{{ vuln.description }}</p>
+                        
+                        <h6>Details:</h6>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <th scope="row">URL:</th>
+                                    <td>{{ vuln.url }}</td>
+                                </tr>
+                                {% if vuln.parameter %}
+                                <tr>
+                                    <th scope="row">Parameter:</th>
+                                    <td>{{ vuln.parameter }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if vuln.payload %}
+                                <tr>
+                                    <th scope="row">Payload:</th>
+                                    <td><code>{{ vuln.payload }}</code></td>
+                                </tr>
+                                {% endif %}
+                                {% if vuln.evidence %}
+                                <tr>
+                                    <th scope="row">Evidence:</th>
+                                    <td>{{ vuln.evidence }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if vuln.header %}
+                                <tr>
+                                    <th scope="row">Header:</th>
+                                    <td>{{ vuln.header }}</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                        
+                        <div class="alert alert-danger mb-3">
+                            <h6>Impact:</h6>
+                            <p class="mb-0">
+                                {% if vuln.type == 'sql_injection' %}
+                                    This SQL injection vulnerability could allow attackers to access, modify, or delete sensitive data in your database.
+                                    They may be able to bypass authentication, access user credentials, or even gain complete control of the database server.
+                                {% elif vuln.type == 'xss' %}
+                                    This Cross-Site Scripting vulnerability could allow attackers to inject malicious scripts that execute in users' browsers.
+                                    This can lead to cookie theft, session hijacking, credential harvesting, or malware distribution to your users.
+                                {% elif vuln.type == 'csrf' %}
+                                    This Cross-Site Request Forgery vulnerability could allow attackers to trick users into performing unwanted actions without their knowledge.
+                                    Attackers could modify account settings, make purchases, or perform other privileged operations on behalf of the user.
+                                {% elif vuln.type == 'open_redirect' %}
+                                    This Open Redirect vulnerability could be used in phishing attacks to redirect users to malicious websites.
+                                    Attackers can exploit the legitimate domain to gain user trust before redirecting to a malicious site.
+                                {% elif 'header' in vuln.type or 'insecure_header' in vuln.type or 'missing_header' in vuln.type %}
+                                    Missing or insecure security headers could leave your application vulnerable to various attacks such as clickjacking,
+                                    content sniffing, or cross-site scripting, depending on which headers are affected.
+                                {% elif 'cookie' in vuln.type %}
+                                    Insecure cookie configuration could allow attackers to steal or modify cookies, potentially leading to
+                                    session hijacking, data theft, or impersonation of legitimate users.
+                                {% else %}
+                                    This vulnerability could potentially be exploited by attackers to compromise the security of your application
+                                    or gain unauthorized access to sensitive information.
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <h6>Recommendation:</h6>
+                            <p class="mb-0">{{ vuln.recommendation }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success">
+    <i class="fas fa-check-circle me-2"></i>
+    <strong>Good news!</strong> No vulnerabilities were found in the scan.
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h4><i class="fas fa-spider me-2"></i>Crawled URLs</h4>
+    </div>
+    <div class="card-body">
+        <p>The scanner discovered and analyzed {{ results.crawled_urls|length }} URLs:</p>
+        <div class="list-group">
+            {% for url in results.crawled_urls[:10] %}
+            <div class="list-group-item list-group-item-action">
+                <i class="fas fa-link me-2"></i>{{ url }}
+            </div>
+            {% endfor %}
+            
+            {% if results.crawled_urls|length > 10 %}
+            <div class="list-group-item d-flex justify-content-center">
+                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" 
+                       data-bs-target="#moreUrls" aria-expanded="false" aria-controls="moreUrls">
+                    Show {{ results.crawled_urls|length - 10 }} more URLs
+                </button>
+            </div>
+            
+            <div class="collapse" id="moreUrls">
+                {% for url in results.crawled_urls[10:] %}
+                <div class="list-group-item list-group-item-action">
+                    <i class="fas fa-link me-2"></i>{{ url }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if results.errors %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-white">
+        <h4><i class="fas fa-exclamation-triangle me-2"></i>Scan Errors</h4>
+    </div>
+    <div class="card-body">
+        <p>The following errors occurred during the scan:</p>
+        <ul class="list-group">
+            {% for error in results.errors %}
+            <li class="list-group-item list-group-item-warning">{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

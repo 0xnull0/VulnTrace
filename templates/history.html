@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}Scan History{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-history me-2"></i>Scan History</h2>
+    <div>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-plus me-2"></i>New Scan
+        </a>
+    </div>
+</div>
+
+{% if scans %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4><i class="fas fa-list me-2"></i>Previous Scans</h4>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Target</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Vulnerabilities</th>
+                        <th>URLs Scanned</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr>
+                        <td>{{ scan.id }}</td>
+                        <td>{{ scan.target.url if scan.target else "Unknown" }}</td>
+                        <td>{{ scan.started_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if scan.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif scan.status == 'in_progress' %}
+                            <span class="badge bg-warning">In Progress</span>
+                            {% else %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {{ scan.vulnerability_count }}
+                                {% if scan.vulnerability_count > 0 %}
+                                <div class="ms-2">
+                                    {% if scan.high_severity_count > 0 %}
+                                    <span class="badge bg-danger me-1" title="High Severity">{{ scan.high_severity_count }}</span>
+                                    {% endif %}
+                                    {% if scan.medium_severity_count > 0 %}
+                                    <span class="badge bg-warning me-1" title="Medium Severity">{{ scan.medium_severity_count }}</span>
+                                    {% endif %}
+                                    {% if scan.low_severity_count > 0 %}
+                                    <span class="badge bg-info" title="Low Severity">{{ scan.low_severity_count }}</span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ scan.urls_scanned }}</td>
+                        <td>
+                            <a href="{{ url_for('view_historical_report', scan_id=scan.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>No scans found.</strong> Start a new scan to see your scan history.
+</div>
+{% endif %}
+{% endblock %}
