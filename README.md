@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/PostgreSQL-Required-blue.svg" alt="PostgreSQL">
 </div>
 
-https://github.com/0xnull0/VulnTrace/blob/main/templates/s.avif
+
 
 <p align="center">
   <b>A modern web vulnerability scanner built with Python and Flask</b>
